@@ -58,7 +58,7 @@ You can tune the following constants at the top of `arduino-subaru-impreza-swc.i
 - `CAN_FREQ`: Set to `MCP_8MHZ` or `MCP_16MHZ` depending on your module's crystal.
 - `SWC_CAN_ID`: The CAN ID for steering wheel messages (defaulted to `0x242`).
 - `PWM_OUT_PIN`: The Arduino pin used for PWM output (defaulted to `D9`).
-- `VOL_UP_PWM`, etc.: The duty cycle values (0-255) for each button.
+- `VOL_UP_PWM`, etc.: The duty cycle values (0-255). These are pre-configured to match the **Sony resistive ladder standard** (similar to RM-X4S), making it compatible with most aftermarket head units that support Sony remotes or have a learning mode.
 
 ## TODO: Physical Build Specs
 

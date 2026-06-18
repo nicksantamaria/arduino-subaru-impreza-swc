@@ -32,17 +32,20 @@ const CAN_CLOCK CAN_FREQ = MCP_8MHZ; // Change to MCP_16MHZ if using a 16MHz cry
 const uint32_t SWC_CAN_ID = 0x242; 
 
 // PWM Duty Cycle Mappings (0-255)
-// These represent the "voltage" the aftermarket head unit will see.
-// Adjust these to match what the head unit expects or to ensure distinct separation.
-const int VOL_UP_PWM     = 30;
-const int VOL_DOWN_PWM   = 60;
-const int NEXT_TRACK_PWM = 90;
-const int PREV_TRACK_PWM = 120;
-const int MODE_PWM       = 150;
-const int MUTE_PWM       = 180;
-const int CALL_ANS_PWM   = 210;
-const int CALL_REJ_PWM   = 240;
-const int NO_BUTTON_PWM  = 0;   // 0V when no button is pressed
+// These represent the "voltage" levels for a Sony-compatible resistor ladder.
+// Standard Sony RM-X4S resistance values (approximate):
+// OFF: High Impedance, SOURCE: 2.2k, MUTE: 4.4k, VOL+: 16.8k, VOL-: 23.6k, SEEK+: 8.8k, SEEK-: 12.1k
+// PWM values below are calibrated for a 5V system with the head unit's internal pull-up.
+// Since the head unit has a learning mode, these are distinct steps following the Sony standard.
+const int VOL_UP_PWM     = 140; // ~2.7V
+const int VOL_DOWN_PWM   = 175; // ~3.4V
+const int NEXT_TRACK_PWM = 90;  // ~1.8V
+const int PREV_TRACK_PWM = 115; // ~2.2V
+const int MODE_PWM       = 45;  // ~0.9V (Source)
+const int MUTE_PWM       = 65;  // ~1.3V (Attenuate)
+const int CALL_ANS_PWM   = 25;  // ~0.5V (Phone/Answer)
+const int CALL_REJ_PWM   = 10;  // ~0.2V (Reject)
+const int NO_BUTTON_PWM  = 0;   // 0V (High resistance/Open circuit)
 
 // --- GLOBALS ---
 MCP2515 mcp2515(CAN_CS_PIN);
