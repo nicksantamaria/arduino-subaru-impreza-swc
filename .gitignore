@@ -1,0 +1,19 @@
+# Arduino build artifacts
+build/
+bin/
+obj/
+
+# Common Arduino/IDE temporary files
+*.tmp
+*.bak
+
+# Compilation databases
+compile_commands.json
+.clangd/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Optional: Ignore local environment settings if any were added
+.env
