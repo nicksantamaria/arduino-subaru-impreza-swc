@@ -32,20 +32,23 @@ make install-deps
 ```
 
 ### 2. Compile
-To compile the firmware:
+To compile the firmware locally:
 
 ```bash
 make
 ```
 
-### 3. Upload
+### 3. Pre-compiled Binaries
+If you don't want to compile the code yourself, you can download the latest pre-compiled `.hex` files from the [Releases](https://github.com/nicksantamaria/arduino-subaru-impreza-swc/releases) page. These can be uploaded to your Arduino Nano using tools like `avrdude` or specialized hex uploaders.
+
+### 4. Upload
 Connect your Arduino Nano and run (adjust the `PORT` in the `Makefile` if necessary):
 
 ```bash
 make upload
 ```
 
-### 4. Monitor
+### 5. Monitor
 To view serial debug output (raw CAN IDs and button detection):
 
 ```bash

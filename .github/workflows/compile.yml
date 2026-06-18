@@ -1,4 +1,4 @@
-name: Compile Sketch
+name: Compile and Release Sketch
 
 on:
   push:
@@ -6,6 +6,8 @@ on:
       - 'README.md'
       - 'LICENSE'
       - '.gitignore'
+    tags:
+      - 'v*'
   pull_request:
     paths-ignore:
       - 'README.md'
@@ -28,3 +30,31 @@ jobs:
 
       - name: Compile
         run: make compile
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: arduino-binaries
+          path: |
+            build/*.hex
+            build/*.elf
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: arduino-binaries
+          path: build
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/*.hex
+            build/*.elf
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
