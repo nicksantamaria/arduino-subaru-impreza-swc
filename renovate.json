@@ -1,0 +1,21 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "automerge": true
+    }
+  ],
+  "regexManagers": [
+    {
+      "fileMatch": ["^Makefile$"],
+      "matchStrings": ["LIB_MCP2515 = \"(?<depName>.+)\"\\n"],
+      "datasourceTemplate": "github-tags",
+      "depNameTemplate": "autowp/arduino-mcp2515"
+    }
+  ]
+}
