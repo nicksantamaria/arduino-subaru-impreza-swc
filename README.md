@@ -111,6 +111,7 @@ flowchart LR
     GX12IN -->|12V| BUCK
     BUCK -->|5V| NANO
     MCP -->|SPI| NANO
+    NANO -->|3.3V| MCP
     NANO -->|PWM KEY| GX12OUT
     GX12OUT -->|KEY + GND| HU
     USBC -.->|USB| NANO
