@@ -1,5 +1,11 @@
 # Subaru SWC CAN Interface
 
+<img src="img/subaru-impreza-my13-hatch.png"
+    alt="2013 Subaru Impreza hatch"
+    width="320"
+    align="right" />
+
+## Goal
 This project provides Arduino Nano firmware to interface between a 2013 Subaru Impreza (GJ/GP) CAN bus and an aftermarket head unit's resistive Steering Wheel Control (SWC) input. It serves as an open-source / DIY alternative to commercial interfaces like the **Aerpro CHSU14C** or **iDatalink Maestro SWC**.
 
 ## Goal
