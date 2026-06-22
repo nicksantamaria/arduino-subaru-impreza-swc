@@ -20,6 +20,21 @@ const int CAN_CS_PIN = 10;
 const int CAN_INT_PIN = 2;
 const int PWM_OUT_PIN = 9;
 
+// Latency reduction: Compile-time debug logging
+#define DEBUG_CAN 0
+
+#if DEBUG_CAN
+  #define DEBUG_PRINT(x) Serial.print(x)
+  #define DEBUG_PRINTLN(x) Serial.println(x)
+  #define DEBUG_PRINT_HEX(x, y) Serial.print(x, y)
+  #define DEBUG_LOG_FRAME(x) printCanFrame(x)
+#else
+  #define DEBUG_PRINT(x)
+  #define DEBUG_PRINTLN(x)
+  #define DEBUG_PRINT_HEX(x, y)
+  #define DEBUG_LOG_FRAME(x)
+#endif
+
 // CAN Bus Speed
 // 2013 Subaru Impreza is typically 500kbps. 
 // MCP2515 clock is usually 8MHz or 16MHz. Most modules are 8MHz.
@@ -50,6 +65,12 @@ const int NO_BUTTON_PWM  = 0;   // 0V (High resistance/Open circuit)
 // --- GLOBALS ---
 MCP2515 mcp2515(CAN_CS_PIN);
 struct can_frame canMsg;
+volatile bool interruptFlag = false;
+int lastPWMValue = -1; // Track last PWM to avoid redundant analogWrite calls
+
+void irqHandler() {
+  interruptFlag = true;
+}
 
 void setup() {
   Serial.begin(115200);
@@ -62,7 +83,24 @@ void setup() {
   if (mcp2515.setBitrate(CAN_BAUDRATE, CAN_FREQ) != MCP2515::ERROR_OK) {
     Serial.println("Error setting MCP2515 Bitrate!");
   }
+
+  // Hardware Filtering: Only allow SWC_CAN_ID (0x242)
+  // Mask 0 (for RXB0): Check all 11 bits of standard ID
+  mcp2515.setFilterMask(MCP2515::MASK0, false, 0x7FF);
+  mcp2515.setFilter(MCP2515::RXF0, false, SWC_CAN_ID);
+  mcp2515.setFilter(MCP2515::RXF1, false, SWC_CAN_ID);
+
+  // Mask 1 (for RXB1): Check all 11 bits of standard ID
+  mcp2515.setFilterMask(MCP2515::MASK1, false, 0x7FF);
+  mcp2515.setFilter(MCP2515::RXF2, false, SWC_CAN_ID);
+  mcp2515.setFilter(MCP2515::RXF3, false, SWC_CAN_ID);
+  mcp2515.setFilter(MCP2515::RXF4, false, SWC_CAN_ID);
+  mcp2515.setFilter(MCP2515::RXF5, false, SWC_CAN_ID);
+
   mcp2515.setNormalMode();
+
+  pinMode(CAN_INT_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(CAN_INT_PIN), irqHandler, FALLING);
 
   Serial.println("Subaru SWC Interface Started");
   Serial.print("Listening for CAN ID: 0x");
@@ -70,14 +108,27 @@ void setup() {
 }
 
 void loop() {
-  if (mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK) {
-    
-    // Always print raw data for debugging and identification
-    printCanFrame(&canMsg);
+  bool pending = false;
+  
+  // Atomic read and clear of the interrupt flag
+  noInterrupts();
+  if (interruptFlag) {
+    interruptFlag = false;
+    pending = true;
+  }
+  interrupts();
 
-    // Process the message if it matches our target ID
-    if (canMsg.can_id == SWC_CAN_ID) {
-      handleSWC(canMsg.data, canMsg.can_dlc);
+  // Process messages if flag was set OR if INT pin is LOW (back-to-back messages)
+  if (pending || digitalRead(CAN_INT_PIN) == LOW) {
+    // Drain all available frames from MCP2515 buffers
+    while (mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK) {
+      // Latency: Guarded debug prints (Zero cost when DEBUG_CAN is 0)
+      DEBUG_LOG_FRAME(&canMsg);
+
+      // Safe ID comparison: Mask out EFF/RTR/ERR bits (0x7FF for standard IDs)
+      if ((canMsg.can_id & 0x7FF) == SWC_CAN_ID) {
+        handleSWC(canMsg.data, canMsg.can_dlc);
+      }
     }
   }
 }
@@ -97,14 +148,14 @@ void handleSWC(uint8_t* data, uint8_t len) {
   uint8_t buttonCode = data[0]; 
 
   switch (buttonCode) {
-    case 0x01: targetPWM = VOL_UP_PWM;     Serial.println(">> Button: VOL UP"); break;
-    case 0x02: targetPWM = VOL_DOWN_PWM;   Serial.println(">> Button: VOL DOWN"); break;
-    case 0x03: targetPWM = NEXT_TRACK_PWM; Serial.println(">> Button: NEXT"); break;
-    case 0x04: targetPWM = PREV_TRACK_PWM; Serial.println(">> Button: PREV"); break;
-    case 0x05: targetPWM = MODE_PWM;       Serial.println(">> Button: MODE"); break;
-    case 0x06: targetPWM = MUTE_PWM;       Serial.println(">> Button: MUTE"); break;
-    case 0x07: targetPWM = CALL_ANS_PWM;   Serial.println(">> Button: CALL ANSWER"); break;
-    case 0x08: targetPWM = CALL_REJ_PWM;   Serial.println(">> Button: CALL REJECT"); break;
+    case 0x01: targetPWM = VOL_UP_PWM;     DEBUG_PRINTLN(">> Button: VOL UP"); break;
+    case 0x02: targetPWM = VOL_DOWN_PWM;   DEBUG_PRINTLN(">> Button: VOL DOWN"); break;
+    case 0x03: targetPWM = NEXT_TRACK_PWM; DEBUG_PRINTLN(">> Button: NEXT"); break;
+    case 0x04: targetPWM = PREV_TRACK_PWM; DEBUG_PRINTLN(">> Button: PREV"); break;
+    case 0x05: targetPWM = MODE_PWM;       DEBUG_PRINTLN(">> Button: MODE"); break;
+    case 0x06: targetPWM = MUTE_PWM;       DEBUG_PRINTLN(">> Button: MUTE"); break;
+    case 0x07: targetPWM = CALL_ANS_PWM;   DEBUG_PRINTLN(">> Button: CALL ANSWER"); break;
+    case 0x08: targetPWM = CALL_REJ_PWM;   DEBUG_PRINTLN(">> Button: CALL REJECT"); break;
     case 0x00: targetPWM = NO_BUTTON_PWM;  break;
     default:
       // Unknown button or multiple buttons pressed
@@ -112,12 +163,16 @@ void handleSWC(uint8_t* data, uint8_t len) {
       break;
   }
 
-  analogWrite(PWM_OUT_PIN, targetPWM);
+  // Optimization: Only write if value changed
+  if (targetPWM != lastPWMValue) {
+    analogWrite(PWM_OUT_PIN, targetPWM);
+    lastPWMValue = targetPWM;
+  }
 }
 
 void printCanFrame(struct can_frame* frame) {
   Serial.print("ID: 0x");
-  Serial.print(frame->can_id, HEX);
+  Serial.print(frame->can_id & 0x7FF, HEX);
   Serial.print(" [");
   Serial.print(frame->can_dlc);
   Serial.print("] ");

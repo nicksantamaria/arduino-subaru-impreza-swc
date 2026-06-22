@@ -23,6 +23,7 @@ The objective is to read steering wheel button presses from the car's CAN bus (v
 - **Microcontroller**: Arduino Nano (USB-C version recommended)
 - **CAN Interface**: MCP2515 CAN Bus Module
 - **Connection**: OBD2 Port (CAN High: Pin 6, CAN Low: Pin 14)
+- **Interrupt Handling**: Uses hardware interrupt on pin D2 for reliable message reception.
 - **Output**: PWM Pin (D9) connected to the head unit's SWC wire.
 
 ## Software Setup
