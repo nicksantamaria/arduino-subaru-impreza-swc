@@ -22,6 +22,8 @@ const int CAN_CS_PIN = 10;
 const int CAN_INT_PIN = 2;
 // Arduino Nano pin for PWM output to Head Unit SWC wire
 const int PWM_OUT_PIN = 9;
+// Arduino Nano pin for LED indicator
+const int LED_PIN = 8;
 
 // Latency reduction: Compile-time debug logging
 // Set to 1 to enable Serial logging, 0 to disable for maximum performance
@@ -96,6 +98,9 @@ void setup() {
 
   pinMode(PWM_OUT_PIN, OUTPUT);
   analogWrite(PWM_OUT_PIN, NO_BUTTON_PWM);
+
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
 
   mcp2515.reset();
   if (mcp2515.setBitrate(CAN_BAUDRATE, CAN_FREQ) != MCP2515::ERROR_OK) {
@@ -185,6 +190,14 @@ void handleSWC(uint8_t* data, uint8_t len) {
   // Optimization: Only write if value changed
   if (targetPWM != lastPWMValue) {
     analogWrite(PWM_OUT_PIN, targetPWM);
+    
+    // Light up LED when a button is pressed
+    if (targetPWM != NO_BUTTON_PWM) {
+      digitalWrite(LED_PIN, HIGH);
+    } else {
+      digitalWrite(LED_PIN, LOW);
+    }
+
     lastPWMValue = targetPWM;
   }
 }

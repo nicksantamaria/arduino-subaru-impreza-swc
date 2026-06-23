@@ -4,8 +4,8 @@
 # Configuration
 BOARD = arduino:avr:nano
 # For newer Nano with ATmega328P (Old Bootloader), use:
-# BOARD = arduino:avr:nano:cpu=atmega328pold
-PORT = /dev/cu.usbserial-10
+#BOARD = arduino:avr:nano:cpu=atmega328pold
+PORT = /dev/cu.usbserial-110
 SKETCH = arduino-subaru-impreza-swc.ino
 BUILD_PATH = build
 
