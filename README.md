@@ -131,7 +131,22 @@ flowchart LR
 
 Mount the Nano and MCP2515 on M3 standoffs screwed into the enclosure floor. Connect them with 10cm female-to-female DuPont jumpers (SPI: MOSI, MISO, SCK, CS, INT, 5V, GND). The buck converter is wired with short soldered leads terminated at the GX12 input connector pins. Both GX12 connectors panel-mount in the enclosure walls.
 
-- [ ] **Wiring Diagram**: Create a schematic showing connections between Nano, MCP2515, and OBD2 port.
-- [ ] **RC Filter**: Design and document a simple RC low-pass filter (e.g., 10kΩ resistor + 10µF capacitor) to smooth the PWM signal into a steady DC voltage for the head unit.
-- [ ] **Enclosure**: Design or select a suitable 3D-printable case for the electronics.
-- [ ] **Vehicle Verification**: Confirm exact CAN IDs and data bytes for the 2013 Subaru Impreza via the Serial Monitor during bench testing.
+## Wiring: Arduino Nano to MCP2515 and LED
+
+Connect the Arduino Nano to the MCP2515 module using female-to-female DuPont jumpers. All SPI signals must match.
+
+| Signal | MCP2515 Pin | Arduino Nano Pin | Cable Colour |
+|--------|-------------|------------------|--------------|
+| Power | VCC | 3.3V | Red |
+| Ground | GND | GND | Black |
+| SPI Clock | SCK | D13 | Yellow |
+| MOSI | SI | D11 | Blue |
+| MISO | SO | D12 | Green |
+| Chip Select | CS | D10 | White |
+| Interrupt | INT | D2 | Orange |
+
+Connect the optional status LED to D8 with a 220Ω series resistor:
+
+Arduino D8 → 220Ω resistor → LED anode, LED cathode → GND
+
+The LED flashes when the Arduino recognises a steering wheel button press. Useful for bench testing to confirm CAN bus messages are being read correctly.
