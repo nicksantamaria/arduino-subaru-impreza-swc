@@ -16,11 +16,15 @@
  */
 
 // --- CONFIGURATION ---
+// Arduino Nano pin connected to MCP2515 CS (Chip Select)
 const int CAN_CS_PIN = 10;
+// Arduino Nano pin connected to MCP2515 INT (Interrupt)
 const int CAN_INT_PIN = 2;
+// Arduino Nano pin for PWM output to Head Unit SWC wire
 const int PWM_OUT_PIN = 9;
 
 // Latency reduction: Compile-time debug logging
+// Set to 1 to enable Serial logging, 0 to disable for maximum performance
 #define DEBUG_CAN 0
 
 #if DEBUG_CAN
@@ -38,12 +42,15 @@ const int PWM_OUT_PIN = 9;
 // CAN Bus Speed
 // 2013 Subaru Impreza is typically 500kbps. 
 // MCP2515 clock is usually 8MHz or 16MHz. Most modules are 8MHz.
+// Speed of the vehicle's CAN bus (standard for most Subarus)
 const CAN_SPEED CAN_BAUDRATE = CAN_500KBPS;
+// Frequency of the crystal on your MCP2515 module
 const CAN_CLOCK CAN_FREQ = MCP_8MHZ; // Change to MCP_16MHZ if using a 16MHz crystal module
 
 // Likely Steering Wheel Control CAN ID
 // Based on research, 0x242 is common for Subaru SWC. 
 // Other possibilities: 0x240, 0x241, 0x202.
+// The specific CAN ID that carries steering wheel button data
 const uint32_t SWC_CAN_ID = 0x242; 
 
 // PWM Duty Cycle Mappings (0-255)
@@ -52,14 +59,25 @@ const uint32_t SWC_CAN_ID = 0x242;
 // OFF: High Impedance, SOURCE: 2.2k, MUTE: 4.4k, VOL+: 16.8k, VOL-: 23.6k, SEEK+: 8.8k, SEEK-: 12.1k
 // PWM values below are calibrated for a 5V system with the head unit's internal pull-up.
 // Since the head unit has a learning mode, these are distinct steps following the Sony standard.
+// PWM level for Volume Up button
 const int VOL_UP_PWM     = 140; // ~2.7V
+// PWM level for Volume Down button
 const int VOL_DOWN_PWM   = 175; // ~3.4V
+// PWM level for Next Track / Seek Up button
 const int NEXT_TRACK_PWM = 90;  // ~1.8V
+// PWM level for Previous Track / Seek Down button
 const int PREV_TRACK_PWM = 115; // ~2.2V
+// PWM level for Mode / Source button
 const int MODE_PWM       = 45;  // ~0.9V (Source)
+// PWM level for Mute / Attenuate button
 const int MUTE_PWM       = 65;  // ~1.3V (Attenuate)
+// PWM level for Answer Call button
 const int CALL_ANS_PWM   = 25;  // ~0.5V (Phone/Answer)
+// PWM level for Reject/Hang-up button
 const int CALL_REJ_PWM   = 10;  // ~0.2V (Reject)
+// PWM level for Voice Activation button (Listening for commands)
+const int VOICE_ACT_PWM  = 200; // ~3.9V (Custom/Voice)
+// PWM level when no button is pressed (idle state)
 const int NO_BUTTON_PWM  = 0;   // 0V (High resistance/Open circuit)
 
 // --- GLOBALS ---
@@ -156,6 +174,7 @@ void handleSWC(uint8_t* data, uint8_t len) {
     case 0x06: targetPWM = MUTE_PWM;       DEBUG_PRINTLN(">> Button: MUTE"); break;
     case 0x07: targetPWM = CALL_ANS_PWM;   DEBUG_PRINTLN(">> Button: CALL ANSWER"); break;
     case 0x08: targetPWM = CALL_REJ_PWM;   DEBUG_PRINTLN(">> Button: CALL REJECT"); break;
+    case 0x09: targetPWM = VOICE_ACT_PWM;  DEBUG_PRINTLN(">> Button: VOICE ACT"); break;
     case 0x00: targetPWM = NO_BUTTON_PWM;  break;
     default:
       // Unknown button or multiple buttons pressed

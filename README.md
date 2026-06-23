@@ -17,6 +17,7 @@ The objective is to read steering wheel button presses from the car's CAN bus (v
 - Mode
 - Mute
 - Call Answer / Reject
+- Voice Activation
 
 ## Hardware Requirements
 
